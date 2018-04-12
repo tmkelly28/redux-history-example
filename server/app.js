@@ -5,6 +5,7 @@ const bodyParser = require('body-parser')
 const db = require('./db')
 const app = express()
 const PORT = process.env.PORT || 3000
+const Puppies = db.model('puppies')
 
 // Logging middleware
 app.use(morgan('dev'))
@@ -17,6 +18,32 @@ app.use(bodyParser.urlencoded({extended: true}))
 app.use(express.static(path.join(__dirname, '..', 'public')))
 
 // If you want to add routes, they should go here!
+app.get('/api/puppies', (req, res, next) => {
+  Puppies.findAll()
+    .then(puppies => res.json(puppies))
+    .catch(next)
+})
+
+app.post('/api/puppies', (req, res, next) => {
+  Puppies.create({
+    name: 'Puppy #' + Math.random()
+  })
+    .then(pup => res.json(pup))
+    .catch(next)
+})
+
+app.get('/api/puppies/:puppyId', (req, res, next) => {
+  Puppies.findById(req.params.puppyId)
+    .then(pup => {
+      if (!pup) {
+        const err = new Error('Pup not found')
+        err.status = 404
+        throw err
+      }
+      res.json(pup)
+    })
+    .catch(next)
+})
 
 // For all GET requests that aren't to an API route,
 // we will send the index.html!
